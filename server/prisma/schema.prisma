@@ -9,3 +9,15 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum ClientType {
+  CONFIDENTIAL
+  PUBLIC
+}
+
+model Client {
+  id            String      @default(cuid()) @id
+  secret        String?
+  type          ClientType?
+  redirectUrls  String[]
+}
