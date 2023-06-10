@@ -16,8 +16,32 @@ enum ClientType {
 }
 
 model Client {
-  id            String      @default(cuid()) @id
-  secret        String?
-  type          ClientType?
-  redirectUrls  String[]
+  id                 String              @id @default(cuid())
+  secret             String?
+  type               ClientType?
+  redirectUrls       String[]
+  AuthorizationCodes AuthorizationCode[]
+  RefreshToken       RefreshToken[]
+}
+
+model AuthorizationCode {
+  id        String   @id @default(cuid())
+  value     String
+  expiresAt DateTime
+  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  String
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String
+  password String
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  value     String
+  expiresAt DateTime
+  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  String
 }

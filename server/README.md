@@ -39,9 +39,18 @@ The client identifier is a cuid and will always be 25 characters long.
   clientSecret: '31e159f0f4a8869a0bf5807db31bd7cd5ad81d60'
 }
 
+Client authentication is done via http basic authentication
+
 ```
 
-#Start server
+# Start server
 ```sh
 yarn start:dev
 ```
+# Authorization
+
+The authorization endpoint is available at `oauth/authorization` and only supports `GET` requests.
+
+# Token request
+
+The token endpoint is available at `oauth/token` and only supports `POST` requests.

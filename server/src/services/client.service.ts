@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { UnauthorizedClientException } from 'src/exceptions/unauthorized-client.exception';
 import oauthConfig from 'src/oauth.config';
 import { Request } from 'express';
+import { AccessDeniedException } from 'src/exceptions/access-denied.exception';
 
 const registerClientSchema = z.object({
   redirectUrls: z.array(z.string().url()),
@@ -17,17 +18,25 @@ const registerClientSchema = z.object({
 export class ClientService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async validateClientCredentials(
-    request: Request,
-  ): Promise<Client | undefined> {
+  async findClientById(id: string): Promise<Client> {
+    const client = await this.prisma.client.findFirst({ where: { id } });
+
+    if (!client) {
+      throw new AccessDeniedException();
+    }
+
+    return client;
+  }
+
+  async assertClientCredentials(request: Request): Promise<Client> {
     const { authorization } = request.headers;
     if (!authorization) {
-      return undefined;
+      throw new UnauthorizedClientException();
     }
 
     const result = authorization.match(/^Basic ([^\s].*)$/);
     if (null === result) {
-      return undefined;
+      throw new UnauthorizedClientException();
     }
 
     const token = result[1];
@@ -45,7 +54,10 @@ export class ClientService {
       throw new UnauthorizedClientException();
     }
 
-    const doesSecretMatch = await bcrypt.compare(clientSecret, client.secret);
+    const doesSecretMatch = await bcrypt.compare(
+      clientSecret,
+      client.secret as string,
+    );
     if (false === doesSecretMatch) {
       throw new UnauthorizedClientException();
     }
@@ -55,6 +67,12 @@ export class ClientService {
 
   async registerClient(data: z.input<typeof registerClientSchema>) {
     const parsed = registerClientSchema.parse(data);
+
+    parsed.redirectUrls.forEach((url) => {
+      if (false === url.startsWith('https')) {
+        throw new Error('TLS is required for redirect urls');
+      }
+    });
 
     const { arePublicClientsAllowed } = oauthConfig;
 

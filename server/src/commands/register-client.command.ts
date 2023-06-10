@@ -1,7 +1,7 @@
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { ClientService } from 'src/services/client.service';
 
-interface BasicCommandOptions {
+interface RegisterClientCommandOptions {
   type: string;
   redirectUrls: Array<string>;
 }
@@ -14,7 +14,7 @@ export class RegisterClientCommand extends CommandRunner {
 
   async run(
     passedParam: string[],
-    options: BasicCommandOptions,
+    options: RegisterClientCommandOptions,
   ): Promise<void> {
     const { client, secret } = await this.clientService.registerClient(
       options as any,
